@@ -33,6 +33,7 @@
 
 *<GROUP>
 *title: Pressure
+*yTickFormat: %5.2f
 *yoffset: -1e5
 *yscale: 1e-5
 *xInt: 500 900
@@ -90,6 +91,7 @@
 
 
 *<GROUP>
+*XInt: -9999 feval(findTime,time-0,tempf-252080000,>,400)
 1130  tempf  252080000
 1131  voidg  252080000
 

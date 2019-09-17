@@ -151,9 +151,6 @@ classdef ClassPlotter < handle
                 for xOrY = 1:2
                     if xOrY == 1
                         if plotGroup.XInterval(1) ~= -9998 && plotGroup.XInterval(2) ~= 9998; continue; end
-                        
-%                         if plotGroup.XInterval(1) ~= -9998 && plotGroup.XInterval(1) ~= -9999; maxValGrp = plotGroup.XInterval(1); else; maxValGrp = -9e19; end
-%                         if plotGroup.XInterval(2) ~= 9998 && plotGroup.XInterval(2) ~= 9999; minValGrp = plotGroup.XInterval(2); else; minValGrp = 9e19; end
                     else
                         if plotGroup.YInterval(1) ~= -9998 && plotGroup.YInterval(2) ~= 9998; continue; end
                     end
@@ -174,7 +171,7 @@ classdef ClassPlotter < handle
                             [minVal,maxVal] = obj.DataSource.GetMaxMin(channel);
                             if minVal < minValGrp; minValGrp = minVal; end
                             if maxVal > maxValGrp; maxValGrp = maxVal; end
-                            fprintf('   Linegroup %d, ''%s'': [%f,%f]\n',j,channel,minVal,maxVal);
+                            %fprintf('   Linegroup %d, ''%s'': [%f,%f]\n',j,channel,minVal,maxVal);
                         end
                     end
 

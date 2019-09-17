@@ -38,6 +38,24 @@ classdef ClassDataSource < handle
             end
         end
         
+        function y = GetValue(obj,inputString)
+            y = [];
+            valueTry = obj.FunctionEvaluater(inputString);
+
+            % Value is not a valid feval expression or a valid with len > 1
+            if isempty(valueTry) || length(valueTry) > 1
+                valueTry = str2double(inputString);
+                if isnan(valueTry)
+                    fprintf('Error: Could not find or evaluate value of vertical line ''%s''\n',inputString);
+                    return;
+                else
+                    y = valueTry;
+                end
+            else
+                y=valueTry;
+            end
+        end
+        
         function y = GetValues(obj,ChannelName)
             % Returns a vector with the data points. y = [] if not found.
             
@@ -60,8 +78,6 @@ classdef ClassDataSource < handle
             else
                 y = obj.Data(:,ind);
             end
-            
-            
         end
         
         

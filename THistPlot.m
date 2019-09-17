@@ -27,6 +27,7 @@ function THistPlot(varargin)
     clc;
 
     fprintf('THistPlot (v%s)\n\n',version);
+    fprintf('(%s)\n',mfilename());
     fprintf('Date: %s\n',datestr(now,'yyyy-mm-dd HH:MM'));
     fprintf('Working folder: ''%s''\n',pwd);
 
@@ -159,7 +160,7 @@ function THistPlot(varargin)
         for i = 1:length(main.PlotGroups)
             fprintf('<-------PLOTGROUP %d-------->\n',i);
             plotGroup = main.PlotGroups{i}
-            plotGroup.XYLabelDefaults{:}
+%             plotGroup.XYLabelDefaults{:}
         end
 
     else
