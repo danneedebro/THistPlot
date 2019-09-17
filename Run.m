@@ -1,11 +1,14 @@
 clc
 
+mfilename()
 
+
+% return
 
 [path,pdfFile]=fileparts(tempname);
 
 psFile = sprintf('%s.ps',pdfFile);
-% psFile = '';
+psFile = '';
 
 paramFile = 'Stripfile-groups.strip';
 % paramFile = '';
@@ -21,9 +24,9 @@ THistPlot('DataFile','Case4.str','ParamFile',paramFile,'PlotFile',psFile,'tmin',
 % main.PlotIt()
 
 
+if ~isempty(psFile)
+    sound(rand(50,1))
 
-sound(rand(50,1))
-
-dos(sprintf('"C:\\Program Files\\gs\\gs9.10\\bin\\gswin64c.exe" -sDEVICE=pdfwrite -o "%1$s.pdf" "%1$s.ps"',pdfFile))
-dos(sprintf('%s.pdf &',pdfFile))
-
+    dos(sprintf('"C:\\Program Files\\gs\\gs9.10\\bin\\gswin64c.exe" -sDEVICE=pdfwrite -o "%1$s.pdf" "%1$s.ps"',pdfFile))
+    dos(sprintf('%s.pdf &',pdfFile))
+end

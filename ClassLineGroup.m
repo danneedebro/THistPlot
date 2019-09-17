@@ -25,6 +25,8 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             obj.YOffsetFirst = PlotGroup.YOffsetFirst;
             obj.XLabel = PlotGroup.XLabel;
             obj.YLabel = PlotGroup.YLabel;
+            obj.XTickFormat = PlotGroup.XTickFormat;
+            obj.YTickFormat = PlotGroup.YTickFormat;
             obj.XYLabelDefaults = PlotGroup.XYLabelDefaults;
             obj.ConstantLines = PlotGroup.ConstantLines;
             obj.VLines = PlotGroup.VLines;
@@ -35,7 +37,6 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             % Plots the channels in the with specified plot properties
             cla;
             
-            errorMessage = '';
             obj.FixProperties();
             
             colors = settings.Colors1;
@@ -172,6 +173,10 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             if legPos(2) == -1; legPos(2) = legPosDef(2); end % Set as it aligns with plotbox top
 
             set(handleLegend,'Position',legPos);
+            
+            % Set format of X and Y ticklabels
+            if ~isempty(obj.XTickFormat); obj.SetTickLabels(handleAxes,'XTick',obj.XTickFormat); end
+            if ~isempty(obj.YTickFormat); obj.SetTickLabels(handleAxes,'YTick',obj.YTickFormat); end
         end
         
         function y = FunctionEvaluater(obj,fevalString)
@@ -293,19 +298,28 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             fprintf('%s YScale: %f, YOffset: %f, YOffsetFirst: %d, YLabel: ''%s''\n',indentStr,obj.YScale,obj.YOffset,obj.YOffsetFirst,obj.YLabel);
             fprintf('%s XScale: %f, XOffset: %f, XLabel: ''%s''\n\n',indentStr,obj.XScale,obj.XOffset,obj.XLabel);
         end
-    end
+    end % methods
     
     methods (Static)
-       function posNew = SetPosition(posCurr,posSet)
-           posNew = zeros(size(posCurr));
-           for i = 1:length(posSet)
-               if posSet == -1
-                   posNew(i) = posCurr(i)
-               else
-                   posNew(i) = posSet(i)
-               end
-           end
-       end
-   end
-end
+        
+        function SetTickLabels(axes,property,formatSpec)
+        % Formats the X- or YTickLabel according to specifications
+        %
+        
+        
+            switch lower(property)
+                case {'xtick','ytick'}
+                    XYTicks = get(axes,property);
+                    XYTickLabel = num2cell(XYTicks)';
+                    for i = 1:length(XYTickLabel)
+                        XYTickLabel{i,1} = sprintf(formatSpec,XYTickLabel{i,1});
+                    end
+                    set(axes,sprintf('%sLabel',property),XYTickLabel);
+                    set(axes,sprintf('%sLabelMode',property),'manual');
+                    set(axes,sprintf('%s',property),XYTicks);
+            end
+        end
+
+    end % methods (static)
+end % classdef
 

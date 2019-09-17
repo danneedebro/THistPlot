@@ -10,6 +10,8 @@ classdef ClassPlotGroup < handle
         YLabel          % The Y-axis label
         XLabel          % The X-axis label
         XYLabelDefaults % A cell array with the default legends
+        XTickFormat     % The format spec for the X-ticks (%5.2f)
+        YTickFormat     % The format spec for the Y-ticks (%5.2f)
         YScale          % The scale factor for the Y-values
         XScale          % The scale factor for the X-values
         YOffset         % The offset to apply to the Y-values
@@ -35,6 +37,8 @@ classdef ClassPlotGroup < handle
                     obj.VLines = {};
                     obj.HLines = {};
                     obj.Title = '';
+                    obj.XTickFormat = '';
+                    obj.YTickFormat = '';
                     obj.YSpanMin = [];
                     obj.YLabel = '';
                     obj.XLabel = '';
@@ -56,6 +60,8 @@ classdef ClassPlotGroup < handle
                     obj.YSpanMin = BaseGroup.YSpanMin;
                     obj.YLabel = BaseGroup.YLabel;
                     obj.XLabel = BaseGroup.XLabel;
+                    obj.XTickFormat = BaseGroup.XTickFormat;
+                    obj.YTickFormat = BaseGroup.YTickFormat;
                     obj.XYLabelDefaults = BaseGroup.XYLabelDefaults;
                     obj.YOffsetRead = BaseGroup.YOffsetRead;
                     obj.YOffsetFirst = BaseGroup.YOffsetFirst;
@@ -89,6 +95,12 @@ classdef ClassPlotGroup < handle
 
                     case '*xlabel:'  % e.g. "*XLabel: Time (s)"
                         obj.XLabel = strtrim(rem);
+                        
+                    case '*ytickformat:' % "*YTickFormat: %5.1f"
+                        obj.YTickFormat = strtrim(rem);
+                        
+                    case '*xtickformat:' % "*XTickFormat: %5.1f"
+                        obj.XTickFormat = strtrim(rem);
 
                     case '*yscale:'  % e.g. "*YScale: 1e-5"
                         tmp = textscan(rem, '%f', 'delimiter', {' '},'MultipleDelimsAsOne',1);
@@ -115,46 +127,36 @@ classdef ClassPlotGroup < handle
                         if isempty(tmp{1,1}); return; else; num = tmp{1,1}; end 
                         obj.XScale = num;
 
-                    case '*yint:'  % e.g. "*YInt: -9999 9999"
-                        tmp = textscan(rem, '%f%f', 'delimiter', {' '},'MultipleDelimsAsOne',1);
-                        if isempty(tmp{1,1}); valMin = -9999; else; valMin = tmp{1,1}; end 
-                        if isempty(tmp{1,2}); valMax =  9999; else; valMax = tmp{1,2}; end
-                        if valMin >= valMax
-                            fprintf('Error: min value >= max value in YInt: min=%f, max=%f. Ignoring\n',valMin,valMax);
-                            return;
-                        end
-                        obj.YInterval = [valMin, valMax];
-                        
                     case '*yspanmin:'  % e.g. "*YSpanMin: 0.1e5"
                         tmp = textscan(rem, '%f', 'delimiter', {' '},'MultipleDelimsAsOne',1);
                         if isempty(tmp{1,1}); return; else; num = tmp{1,1}; end 
                         obj.YSpanMin = num;
 
-                    case '*xint:'  % e.g. "*XInt: -9999 9999"
-                        tmp = textscan(rem, '%f%f', 'delimiter', {' '},'MultipleDelimsAsOne',1);
-                        if isempty(tmp{1,1}); valMin = -9999; else; valMin = tmp{1,1}; end 
-                        if isempty(tmp{1,2}); valMax =  9999; else; valMax = tmp{1,2}; end
-                        obj.XInterval = [valMin, valMax];
+                    case {'*xint:','*yint:'}  % e.g. "*XInt: -9999 9999"
+                        tmp = textscan(rem, '%s%s', 'delimiter', {' '},'MultipleDelimsAsOne',1);
+                        if isempty(tmp{1,1}); obj.FailRead(inputString); return; else; valMinStr = tmp{1,1}{1}; end 
+                        if isempty(tmp{1,2}); obj.FailRead(inputString); return; else; valMaxStr = tmp{1,2}{1}; end
+                        valMin = obj.DataSource.GetValue(valMinStr);
+                        valMax = obj.DataSource.GetValue(valMaxStr);
+                        if isempty(valMin); obj.FailParse(valMinStr,inputString); return; end
+                        if isempty(valMax); obj.FailParse(valMaxStr,inputString); return; end
+                        switch lower(word1)
+                            case '*xint:'
+                                obj.XInterval = [valMin, valMax];
+                            case '*yint:'
+                                obj.YInterval = [valMin, valMax];
+                        end
 
                     case '*vline:'
                         tmp = textscan(rem, '%s%[^\n]', 'delimiter', {' '},'MultipleDelimsAsOne',1);
-                        if isempty(tmp{1,1}); return; else; valueStr = tmp{1,1}{1}; end
+                        if isempty(tmp{1,1}); return; else; valStr = tmp{1,1}{1}; end
                         if isempty(tmp{1,2}); descr = 'line'; else; descr = tmp{1,2}{1}; end
                         
                         % Try to fetch value from Datasource (if feval-expression)
-                        valueStr
-                        value = obj.DataSource.FunctionEvaluater(valueStr)
+                        val = obj.DataSource.GetValue(valStr);
                         
-                        
-                        if isempty(value) || length(value)>1
-                            value = str2double(valueStr)
-                            if isnan(value)
-                                fprintf('Error: Couldn''t find value of vertical line ''%s''\n',valueStr);
-                                value = num
-                            end
-                        end
-                        
-                        obj.VLines{length(obj.VLines)+1} = {value,descr};
+                        if isempty(val); obj.FailParse(valStr,inputString); return; end 
+                        obj.VLines{length(obj.VLines)+1} = {val,descr};
                         
                     case '*line:'  % e.g. "*line 250 Max value"
                         tmp = textscan(rem, '%f%[^\n]', 'delimiter', {' '},'MultipleDelimsAsOne',1);
@@ -193,8 +195,9 @@ classdef ClassPlotGroup < handle
                         end
 
                 end % switch
-            catch
-                fprintf('Error parsing ''%s''\n',inputString);
+            catch ME
+                fprintf('Error: unexpected error parsing ''%s''\n',inputString);
+                fprintf('       ''%s''\n',ME.message);
             end
         end
         
@@ -217,6 +220,19 @@ classdef ClassPlotGroup < handle
             end
         end
         
-    end
+    end % methods
+    
+    methods (Static)
+        function FailRead(inputString)
+            fprintf('Error: Failed reading input: ''%s''\n',inputString);
+        end
+        
+        function FailParse(strToParse, inputString)
+            fprintf('Error: Failed getting value from string ''%s'' in ''%s''\n',strToParse,inputString);
+        end
+        
+        
+    end % methods static
+    
 end
 
