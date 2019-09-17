@@ -81,8 +81,6 @@ classdef ClassLineGroup < handle & ClassPlotGroup
                 if i > 1; hold on; end
                 lines(i) = plot(x,y);
                 set(lines(i),'Color',colors{i},'LineWidth',1.5);
-                
-%                 legend(lines(i),obj.Legends{i},'FontSize',settings.LegendFontSize,'Box',settings.LegendBox);
             end
             
             % Loop through all constant lines and plot them
@@ -178,49 +176,7 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             if ~isempty(obj.XTickFormat); obj.SetTickLabels(handleAxes,'XTick',obj.XTickFormat); end
             if ~isempty(obj.YTickFormat); obj.SetTickLabels(handleAxes,'YTick',obj.YTickFormat); end
         end
-        
-        function y = FunctionEvaluater(obj,fevalString)
-            % parses a feval string
-            % feval(smooth,cntrlvar-9,15)   smooths values in cntrlvar-9
-            
-            y = [];
-            
-            % Exit with y = -1 if not a feval string
-            if ~startsWith(fevalString,'feval(') || ~endsWith(fevalString,')'); return; end
-            
-            % Parse the feval arguments using textscan
-            argsStr = fevalString(6+1:length(fevalString)-1);
-            args = textscan(argsStr, '%s', 'delimiter', {','},'MultipleDelimsAsOne',1);
-            
-            % First argument must be the function name
-            if isempty(args{1,1}); return; else; func = args{1,1}{1}; end
-            
-            % Loop through rest of args and if it is a channel name, read
-            % data from DataSource
-            fevalArgs = cell(1,size(args{1,1},1));
-            fevalArgs{1,1} = func;
-            
-            for i = 2:size(args{1,1},1)
-                arg = args{1,1}{i,1};
-                
-                if obj.DataSource.ChannelExist(arg)
-                    fevalArgs{1,i} = obj.DataSource.GetValues(arg);
-                elseif isnan(str2double(arg))
-                    fevalArgs{1,i} = arg;
-                else
-                    fevalArgs{1,i} = str2double(arg);
-                end
-            end
-            
-            % Try running feval command
-            try
-                y=feval(fevalArgs{1,1},fevalArgs{1,2:size(fevalArgs,2)});
-            catch ME
-                fprintf('Error: Failed evaluating feval-expression ''%s'' with \n       message ''%s''\n',fevalString,ME.message);
-            end
-            
-        end
-        
+             
         function obj = ParseInput(obj,inputString)
             % Parses input for current linegroup
             ParseInput@ClassPlotGroup(obj,inputString,0);
@@ -265,7 +221,7 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             if isempty(obj.XLabel)
                 xChannel = obj.Channels{end}{1,1};
                 for i = length(obj.XYLabelDefaults):-1:1
-                    if startsWith(xChannel,obj.XYLabelDefaults{i}{1,1})
+                    if strfind(xChannel,obj.XYLabelDefaults{i}{1,1})==1
                         obj.XLabel = obj.XYLabelDefaults{i}{1,2};
                         break;
                     end
@@ -276,7 +232,7 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             if isempty(obj.YLabel)
                 yChannel = obj.Channels{end}{1,2};
                 for i = length(obj.XYLabelDefaults):-1:1
-                    if startsWith(yChannel,obj.XYLabelDefaults{i}{1,1})
+                    if strfind(yChannel,obj.XYLabelDefaults{i}{1,1})==1
                         obj.YLabel = obj.XYLabelDefaults{i}{1,2};
                         break;
                     end
@@ -305,7 +261,6 @@ classdef ClassLineGroup < handle & ClassPlotGroup
         function SetTickLabels(axes,property,formatSpec)
         % Formats the X- or YTickLabel according to specifications
         %
-        
         
             switch lower(property)
                 case {'xtick','ytick'}

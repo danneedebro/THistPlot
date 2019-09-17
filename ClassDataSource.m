@@ -88,7 +88,7 @@ classdef ClassDataSource < handle
             y = [];
             
             % Exit with y = -1 if not a feval string
-            if ~startsWith(fevalString,'feval(') || ~endsWith(fevalString,')'); return; end
+            if ~strncmpi(fevalString,'feval(',6); return; end
             
             % Parse the feval arguments using textscan
             argsStr = fevalString(6+1:length(fevalString)-1);

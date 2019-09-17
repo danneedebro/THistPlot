@@ -8,10 +8,10 @@ mfilename()
 [path,pdfFile]=fileparts(tempname);
 
 psFile = sprintf('%s.ps',pdfFile);
-psFile = '';
+% psFile = '';
 
 paramFile = 'Stripfile-groups.strip';
-% paramFile = '';
+paramFile = '';
 
 THistPlot('DataFile','Case4.str','ParamFile',paramFile,'PlotFile',psFile,'tmin',250,'tmax',900,'title','Test plotting');
 

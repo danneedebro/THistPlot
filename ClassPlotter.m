@@ -86,7 +86,7 @@ classdef ClassPlotter < handle
             indGrp = 1;
 
             % Read strip-request file
-            fid=fopen(paramFile);  % Öppnar parameterfil för inläsning
+            fid=fopen(paramFile);  % ï¿½ppnar parameterfil fï¿½r inlï¿½sning
             run = 1;
             AddToExistingLineGroup = 0;
             while run == 1
@@ -208,12 +208,8 @@ classdef ClassPlotter < handle
             
             obj.PlotFigure(Filename,page,1); % Run setup to avoid artefacts for annotations
             
-            anTitle = annotation(gcf,'textbox','String',obj.Title,'Position', ...
-                        [0.000 0.9 1.0 .1],'HorizontalAlignment',...
-                        'center','LineStyle','none','FontSize', obj.Settings.MainTitleFontSize);
-            anPage = annotation(gcf,'textbox','String','Page','Position', ...
-                        [0.900 0.0 0.1 .05],'HorizontalAlignment',...
-                        'Left','LineStyle','none','FontSize', 10);
+            anTitle = annotation(gcf,'textbox',[0.000,0.9,1.0,.1],'String',obj.Title,'HorizontalAlignment','center','LineStyle','none','FontSize', obj.Settings.MainTitleFontSize);
+            anPage = annotation(gcf,'textbox',[0.900,0.0,0.1,.05],'String','Page','HorizontalAlignment','Left','LineStyle','none','FontSize', 10);
             
             % Loop through all plotgroups
             tstart = tic;
