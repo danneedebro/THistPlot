@@ -201,9 +201,27 @@ classdef ClassPlotGroup < handle
             end
         end
         
+        function [valMin,valMax] = GetGroupMinMax(obj,IndexForXorYChannel)
+            % Return the x max and min values of current linegroup
+            valMin = []; valMax = []; % Defaults
+            valMin0 = 9e19; valMax0 = -9e19;  % High and low values
+            
+            for i = 1:length(obj.LineGroups)
+                lineGroup = obj.LineGroups{i};
+                [valMinTry,valMaxTry] = lineGroup.GetMinMax(IndexForXorYChannel);
+                if ~isempty(valMinTry) && valMinTry < valMin0; valMin0 = valMinTry; end
+                if ~isempty(valMaxTry) && valMaxTry > valMax0; valMax0 = valMaxTry; end
+            end
+            
+            if valMin0 ~= 9e19; valMin = valMin0; end
+            if valMax0 ~=-9e19; valMax = valMax0; end
+            
+        end
+        
         function WriteSummary(obj)
             % Writes out a summary of the plotproperties of plotgroup
             indentStr = repmat(' ',[1,4]);
+            
             fprintf('Title: ''%s''\n',obj.Title);
             fprintf('YScale: %f, YOffset: %f, YOffsetFirst: %d, YLabel: ''%s''\n',obj.YScale,obj.YOffset,obj.YOffsetFirst,obj.YLabel);
             fprintf('XScale: %f, XOffset: %f, XLabel: ''%s''\n',obj.XScale,obj.XOffset,obj.XLabel);

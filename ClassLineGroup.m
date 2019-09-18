@@ -179,48 +179,6 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             if ~isempty(obj.YTickFormat); obj.SetTickLabels(handleAxes,'YTick',obj.YTickFormat); end
         end
         
-        function y = FunctionEvaluater(obj,fevalString)
-            % parses a feval string
-            % feval(smooth,cntrlvar-9,15)   smooths values in cntrlvar-9
-            
-            y = [];
-            
-            % Exit with y = -1 if not a feval string
-            if ~startsWith(fevalString,'feval(') || ~endsWith(fevalString,')'); return; end
-            
-            % Parse the feval arguments using textscan
-            argsStr = fevalString(6+1:length(fevalString)-1);
-            args = textscan(argsStr, '%s', 'delimiter', {','},'MultipleDelimsAsOne',1);
-            
-            % First argument must be the function name
-            if isempty(args{1,1}); return; else; func = args{1,1}{1}; end
-            
-            % Loop through rest of args and if it is a channel name, read
-            % data from DataSource
-            fevalArgs = cell(1,size(args{1,1},1));
-            fevalArgs{1,1} = func;
-            
-            for i = 2:size(args{1,1},1)
-                arg = args{1,1}{i,1};
-                
-                if obj.DataSource.ChannelExist(arg)
-                    fevalArgs{1,i} = obj.DataSource.GetValues(arg);
-                elseif isnan(str2double(arg))
-                    fevalArgs{1,i} = arg;
-                else
-                    fevalArgs{1,i} = str2double(arg);
-                end
-            end
-            
-            % Try running feval command
-            try
-                y=feval(fevalArgs{1,1},fevalArgs{1,2:size(fevalArgs,2)});
-            catch ME
-                fprintf('Error: Failed evaluating feval-expression ''%s'' with \n       message ''%s''\n',fevalString,ME.message);
-            end
-            
-        end
-        
         function obj = ParseInput(obj,inputString)
             % Parses input for current linegroup
             ParseInput@ClassPlotGroup(obj,inputString,0);
@@ -265,7 +223,7 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             if isempty(obj.XLabel)
                 xChannel = obj.Channels{end}{1,1};
                 for i = length(obj.XYLabelDefaults):-1:1
-                    if startsWith(xChannel,obj.XYLabelDefaults{i}{1,1})
+                    if strfind(xChannel,obj.XYLabelDefaults{i}{1,1}) == 1
                         obj.XLabel = obj.XYLabelDefaults{i}{1,2};
                         break;
                     end
@@ -276,7 +234,7 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             if isempty(obj.YLabel)
                 yChannel = obj.Channels{end}{1,2};
                 for i = length(obj.XYLabelDefaults):-1:1
-                    if startsWith(yChannel,obj.XYLabelDefaults{i}{1,1})
+                    if strfind(yChannel,obj.XYLabelDefaults{i}{1,1}) == 1
                         obj.YLabel = obj.XYLabelDefaults{i}{1,2};
                         break;
                     end
@@ -289,6 +247,32 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             % Appends channel name and description to current lineobject
             obj.Channels{length(obj.Channels)+1} = {XChannel,YChannel};
             obj.Legends{length(obj.Legends)+1} = Description;
+        end
+        
+        function [xMin,xMax] = GetXMinMax(obj)
+            % Return the x max and min values of current linegroup
+            [xMin,xMax] = GetMinMax(1);
+        end
+        
+        function [yMin,yMax] = GetYMinMax(obj)
+            % Return the x max and min values of current linegroup
+            [yMin,yMax] = GetYMinMax(2);
+        end
+        
+        function [valMin,valMax] = GetMinMax(obj,IndexForXorYChannel)
+            % Return the x max and min values of current linegroup
+            valMin = []; valMax = []; % Defaults
+            valMin0 = 9e19; valMax0 = -9e19;  % High and low values
+            
+            for i = 1:length(obj.Channels)
+                channel = obj.Channels{i}{1,IndexForXorYChannel};
+                [valMinTry,valMaxTry] = obj.DataSource.GetMaxMin(channel);
+                if ~isempty(valMinTry) && valMinTry < valMin0; valMin0 = valMinTry; end
+                if ~isempty(valMaxTry) && valMaxTry > valMax0; valMax0 = valMaxTry; end
+            end
+            
+            if valMin0 ~= 9e19; valMin = valMin0; end
+            if valMax0 ~=-9e19; valMax = valMax0; end
         end
         
         function WriteSummary(obj)
