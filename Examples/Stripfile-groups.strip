@@ -1,0 +1,99 @@
+=Stripfil
+0000100 strip fmtout
+0000103 0
+
+*XYLabelDefaults: time-0 Flow time (seconds)
+*XYLabelDefaults: mflowj- Mass flow (kg/s)
+*XYLabelDefaults: p- Pressure (Pa)
+*XYLabelDefaults: tempf- Temperature (K)
+*XYLabelDefaults: tempg- Temperature (K)
+*XYLabelDefaults: void- Void fraction (-)
+
+*
+*vline: 15 Line 1
+
+
+
+*<GROUP>
+*title: Mass flows
+*yint: 3 9998
+*vline: feval(findTime,time-0,tempf-106010000,>,973.1500) Time start
+1001  mflowj    101000000
+1002  mflowj    103000000
+*<PLOT>
+*xint: 500 900
+1003  mflowj    105000000
+1004  mflowj    107000000
+*line: 5
+*-YSpanMin: 10
+
+1005  mflowj    109000000
+1006  mflowj    111000000
+1007  mflowj    113000000
+
+*<GROUP>
+*title: Pressure
+*yTickFormat: %5.2f
+*yoffset: -1e5
+*yscale: 1e-5
+*xInt: 500 900
+*XYLabelDefaults: mflowjNew- Mass flow (kg/s)
+
+1031  p    100010000
+1032  p    102010000
+*<PLOT>
+1033  p    102050000
+1034  p    106010000
+*title: Pressure-subplot
+
+
+
+1035  p    106210000
+1036  p    110010000
+1037  p    110120000
+1038  p    114010000
+1039  p    114120000
+
+
+
+*<GROUP>
+*Title: Valve opening
+*yScale: 100
+*yLabel: Opening (%)
+
+1090  vlvstem    119
+1091  vlvstem    121
+1092  vlvstem    123
+
+
+*<GROUP>
+*Title: Temperature
+*yLabel: Temperature (°C)
+*yOffset: -273.15
+1101  tempf  102010000
+1102  tempf  106010000
+1103  tempf  110010000
+*line: 290 Hello
+
+
+*<GROUP>
+*<PLOT>
+*YScale: 1e-3
+*yLabel: Heat flow (kW)
+*XInt: 500 800
+1110  cntrlvar 3  * Q defined on 711 side
+1111  cntrlvar 9  * Q defined on 337 side
+*curve: time-0 feval(smooth,cntrlvar-3,15) cntrlvar-3(smoothed)
+
+*<GROUP>
+1120  cntrlvar 15
+1121  cntrlvar 16
+
+
+*<GROUP>
+*XInt: -9999 feval(findTime,time-0,tempf-252080000,>,400)
+1130  tempf  252080000
+1131  voidg  252080000
+
+
+.end

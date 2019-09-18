@@ -20,6 +20,10 @@ classdef ClassDataSource < handle
         
         function [minVal,maxVal] = GetMaxMin(obj,ChannelName)
             % Returns the max min of the channel
+            
+            minVal = [];
+            maxVal = [];
+            
             vals = obj.GetValues(ChannelName);
             if ~isempty(vals)
                 minVal = min(vals);
@@ -88,21 +92,22 @@ classdef ClassDataSource < handle
             y = [];
             
             % Exit with y = -1 if not a feval string
-            if ~startsWith(fevalString,'feval(') || ~endsWith(fevalString,')'); return; end
+            if ~strncmpi(fevalString,'@',1) || ~strncmpi(fevalString(end),')',1); return; end
             
             % Parse the feval arguments using textscan
-            argsStr = fevalString(6+1:length(fevalString)-1);
-            args = textscan(argsStr, '%s', 'delimiter', {','},'MultipleDelimsAsOne',1);
+            exprStr = fevalString(2:end-1);
+            tmp = textscan(exprStr, '%s', 'delimiter', {'('},'MultipleDelimsAsOne',0);
+            if isempty(tmp{1,1}); return; else; functionName = tmp{1,1}{1}; end
             
-            % First argument must be the function name
-            if isempty(args{1,1}); return; else; func = args{1,1}{1}; end
+            if size(tmp{1,1},1) > 1; argsStr = tmp{1,1}{2}; else; argsStr = ' '; end
+            
+            args = textscan(argsStr, '%s', 'delimiter', {','},'MultipleDelimsAsOne',1);
             
             % Loop through rest of args and if it is a channel name, read
             % data from DataSource
             fevalArgs = cell(1,size(args{1,1},1));
-            fevalArgs{1,1} = func;
             
-            for i = 2:size(args{1,1},1)
+            for i = 1:size(args{1,1},1)
                 arg = args{1,1}{i,1};
                 
                 if obj.ChannelExist(arg)
@@ -116,7 +121,11 @@ classdef ClassDataSource < handle
             
             % Try running feval command
             try
-                y=feval(fevalArgs{1,1},fevalArgs{1,2:size(fevalArgs,2)});
+                if size(args,1) > 0
+                    y=feval(functionName,fevalArgs{1,1:size(fevalArgs,2)});
+                else
+                    y=feval(functionName);
+                end
             catch ME
                 fprintf('Error: Failed evaluating feval-expression ''%s'' with \n       message ''%s''\n',fevalString,ME.message);
             end

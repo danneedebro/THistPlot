@@ -27,6 +27,8 @@ classdef ClassPlotter < handle
         
         function obj = StagePlotGroups(obj)
             % Create one plotgroup and fill with linegroups from DataSource
+            fprintf('- No parameter file given, plot everything in data file\n');
+            
             baseGroup = ClassPlotGroup([],obj.DataSource);
             baseGroup.XInterval = [obj.XMinGlobal,obj.XMaxGlobal];
             
@@ -75,6 +77,7 @@ classdef ClassPlotter < handle
             % 1034  p    106010000
             %
             %
+            fprintf('- Construct plot groups from file ''%s''\n',paramFile);
             
             % Create base group with global settings
             baseGroup = ClassPlotGroup([],obj.DataSource);
@@ -136,62 +139,58 @@ classdef ClassPlotter < handle
             end
             fclose(fid);
             
-            obj.GetGroupLimits();
+            % If group limits are set as XInt or YInt replace -9998 and
+            % 9998 (the code for autoscale groupwise)
+            obj.SetGroupAutoLimits();
             
         end
         
-        function GetGroupLimits(obj)
+        function SetGroupAutoLimits(obj)
             % Finds and sets the min and the max values of plotgroups
             % that uses the group-scale option -+9998
-             
+            fprintf('- Checks and sets auto group scaling (if any)\n');
+            
             for i = 1:length(obj.PlotGroups)
                 plotGroup = obj.PlotGroups{i};
                 
-                
                 for xOrY = 1:2
+                    % if 
                     if xOrY == 1
                         if plotGroup.XInterval(1) ~= -9998 && plotGroup.XInterval(2) ~= 9998; continue; end
                     else
                         if plotGroup.YInterval(1) ~= -9998 && plotGroup.YInterval(2) ~= 9998; continue; end
                     end
                     
-                    minValGrp = 9e19;
-                    maxValGrp = -9e19;
+                    valMin0 = 9e19; valMax0 = -9e19;  % High and low values
                     
-                    fprintf('Plotgroup %d:\n',i);
-
-                    % Loop through each linegroup in current plotgroup
-                    for j = 1:length(plotGroup.LineGroups)
-                        lineGroup = plotGroup.LineGroups{j};
-
-                        % Loop through all channels in current lineGroup
-                        % (usally just one)
-                        for k = 1:length(lineGroup.Channels)
-                            channel = lineGroup.Channels{k}{1,xOrY};
-                            [minVal,maxVal] = obj.DataSource.GetMaxMin(channel);
-                            if minVal < minValGrp; minValGrp = minVal; end
-                            if maxVal > maxValGrp; maxValGrp = maxVal; end
-                            %fprintf('   Linegroup %d, ''%s'': [%f,%f]\n',j,channel,minVal,maxVal);
-                        end
-                    end
-
+                    [valMinTry,valMaxTry] = plotGroup.GetGroupMinMax(xOrY);
+                    if ~isempty(valMinTry) && valMinTry < valMin0; valMin0 = valMinTry; end
+                    if ~isempty(valMaxTry) && valMaxTry > valMax0; valMax0 = valMaxTry; end
+                    
                     if xOrY == 1
-                        if plotGroup.XInterval(1) == -9998; plotGroup.XInterval(1) = min(minValGrp,plotGroup.XInterval(2)-0.1); end
-                        if plotGroup.XInterval(2) ==  9998; plotGroup.XInterval(2) = max(maxValGrp,plotGroup.XInterval(1)+0.1); end
+                        if plotGroup.XInterval(1) == -9998; plotGroup.XInterval(1) = min(valMin0,plotGroup.XInterval(2)-0.1); end
+                        if plotGroup.XInterval(2) ==  9998; plotGroup.XInterval(2) = max(valMax0,plotGroup.XInterval(1)+0.1); end
                         fprintf('Plotgroup %d, new X limits = [%f,%f]\n',i,plotGroup.XInterval(1),plotGroup.XInterval(2));
                     else
-                        if plotGroup.YInterval(1) == -9998; plotGroup.YInterval(1) = min(minValGrp,plotGroup.YInterval(2)-0.1); end
-                        if plotGroup.YInterval(2) ==  9998; plotGroup.YInterval(2) = max(maxValGrp,plotGroup.YInterval(1)+0.1); end
+                        if plotGroup.YInterval(1) == -9998; plotGroup.YInterval(1) = min(valMin0,plotGroup.YInterval(2)-0.1); end
+                        if plotGroup.YInterval(2) ==  9998; plotGroup.YInterval(2) = max(valMax0,plotGroup.YInterval(1)+0.1); end
                         fprintf('Plotgroup %d, new Y limits = [%f,%f]\n',i,plotGroup.YInterval(1),plotGroup.YInterval(2));
                     end
                     
+                    % Set linegroup limits if autoscale
+                    for j = 1:length(plotGroup.LineGroups)
+                        lineGroup = plotGroup.LineGroups{j};
+                        if xOrY == 1 
+                            if lineGroup.XInterval(1) == -9998; lineGroup.XInterval(1) = plotGroup.XInterval(1); end
+                            if lineGroup.XInterval(2) ==  9998; lineGroup.XInterval(2) = plotGroup.XInterval(2); end
+                        else
+                            if lineGroup.YInterval(1) == -9998; lineGroup.YInterval(1) = plotGroup.YInterval(1); end
+                            if lineGroup.YInterval(2) ==  9998; lineGroup.YInterval(2) = plotGroup.YInterval(2); end
+                        end
+                    end
+                    
                 end
-                
-               
-                
-                
             end
-            
         end
         
         
@@ -208,12 +207,11 @@ classdef ClassPlotter < handle
             
             obj.PlotFigure(Filename,page,1); % Run setup to avoid artefacts for annotations
             
-            anTitle = annotation(gcf,'textbox','String',obj.Title,'Position', ...
-                        [0.000 0.9 1.0 .1],'HorizontalAlignment',...
-                        'center','LineStyle','none','FontSize', obj.Settings.MainTitleFontSize);
-            anPage = annotation(gcf,'textbox','String','Page','Position', ...
-                        [0.900 0.0 0.1 .05],'HorizontalAlignment',...
-                        'Left','LineStyle','none','FontSize', 10);
+            anTitle = annotation(gcf,'textbox',[0.000 0.9 1.0 .1],'String',obj.Title, ...
+                                 'HorizontalAlignment', 'center','LineStyle','none',...
+                                 'FontSize', obj.Settings.MainTitleFontSize);
+            anPage = annotation(gcf,'textbox',[0.900 0.0 0.1 .05], 'String','Page', ...
+                                 'HorizontalAlignment','Left','LineStyle','none','FontSize', 10);
             
             % Loop through all plotgroups
             tstart = tic;
