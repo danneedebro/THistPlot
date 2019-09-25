@@ -24,7 +24,7 @@ function THistPlot(varargin)
 %
     clc;
 
-    version = '1.0.0-beta.3';
+    version = '1.0.0-beta.4';
     scriptPathFull = mfilename('fullpath');
     [scriptPath,~] = fileparts(scriptPathFull);
     fullfile(scriptPath,'/usr/lib')
