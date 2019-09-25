@@ -25,6 +25,7 @@ function THistPlot(varargin)
     clc;
 
     version = '1.0.0-beta.4';
+    scriptUrl = 'https://github.com/danneedebro/THistPlot';
     scriptPathFull = mfilename('fullpath');
     [scriptPath,~] = fileparts(scriptPathFull);
     fullfile(scriptPath,'/usr/lib')
@@ -32,7 +33,7 @@ function THistPlot(varargin)
     
     
 
-    fprintf('THistPlot (v%s)\n\n',version);
+    fprintf('THistPlot (v%s), %s\n\n',version,scriptUrl);
     fprintf('(%s)\n',scriptPath);
     fprintf('Date: %s\n',datestr(now,'yyyy-mm-dd HH:MM'));
     fprintf('Working folder: ''%s''\n',pwd);
