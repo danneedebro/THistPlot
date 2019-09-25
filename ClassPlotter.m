@@ -234,7 +234,7 @@ classdef ClassPlotter < handle
                         subplot(2,1,2);
                         plotLower = lineGroup.Plot(settingsLowerPlot);
 %                         set(plotLower,'Position',settingsLowerPlot.BoxPosition);
-                    else
+                    elseif exist('plotLower','var')
                         delete(plotLower);
                     end
                     
