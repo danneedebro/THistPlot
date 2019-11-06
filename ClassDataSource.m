@@ -3,19 +3,35 @@ classdef ClassDataSource < handle
     %   Detailed explanation goes here
     
     properties
-        Data        % A MxN matrix with data
-        Channels    % A 1xM cell array with unique channel names
+        DataGroups  % A 1xT struct array with T data groups (each channel in
+                    % a datagroup have the same x-values). Each data group
+                    % have the following fields:
+                    %   ChannelNames    A cell string array with the
+                    %                   names of the channels in the datagroup
+                    %   Values          A 1xM cell array containing the values (1xN array)
+                    %                   of each channel in current data
+                    %                   group.
+    end
+    properties (Dependent)
+        NumberOfChannels    % Number of channels
     end
     
     methods
-        function obj = ClassDataSource(data,channels)
+        function obj = ClassDataSource(DataGroups)
             % Construct an instance of this class
             %   Detailed explanation goes here
-            if size(data,2) ~= size(channels,2)
-                fprintf('Error: Number of channels in ''data''(%d) and ''channels''(%d) doesn''t match.',size(data,2),size(channels,2));
+            
+            obj.DataGroups = DataGroups;
+        end
+        
+        function N = get.NumberOfChannels(obj)
+            cnt = 0;
+            for i = 1:length(obj.DataGroups)
+                for j = 1:length(obj.DataGroups(i).ChannelNames)
+                    cnt = cnt + 1;
+                end
             end
-            obj.Data = data;
-            obj.Channels = channels;
+            N = cnt;
         end
         
         function [minVal,maxVal] = GetMaxMin(obj,ChannelName)
@@ -32,12 +48,14 @@ classdef ClassDataSource < handle
         end
         
         function found = ChannelExist(obj,ChannelName)
-            % Returns a vector with the data points. y = [] if not found.
+            % Returns a true if channel exists in DataGroups
             found = false;
-            for i = 1:length(obj.Channels)
-                Channel = obj.Channels{i};
-                if strcmpi(Channel,ChannelName) == 1
-                    found = true;
+            for i = 1:length(obj.DataGroups)
+                for j = 1:length(obj.DataGroups(i).ChannelNames)
+                    Channel = obj.DataGroups(i).ChannelNames{j};
+                    if strcmpi(Channel,ChannelName) == 1
+                        found = true;
+                    end
                 end
             end
         end
@@ -63,24 +81,28 @@ classdef ClassDataSource < handle
         function y = GetValues(obj,ChannelName)
             % Returns a vector with the data points. y = [] if not found.
             
-            % First try a feval evaluation on channelname
+            % First try a feval evaluation on channelname. If this succeds
+            % exit function returning this value
             y = obj.FunctionEvaluater(ChannelName);
             if ~isempty(y); return; end
             
+            dataGroupInd = [];
             ind = [];
-            for i = 1:length(obj.Channels)
-                Channel = obj.Channels{i};
-                if strcmpi(Channel,ChannelName) == 1
-                    ind = i;
+            for i = 1:length(obj.DataGroups)
+                for j = 1:length(obj.DataGroups(i).ChannelNames)
+                    Channel = obj.DataGroups(i).ChannelNames{j};
+                    if strcmpi(Channel,ChannelName) == 1
+                        dataGroupInd = i;
+                        ind = j;
+                    end
                 end
             end
             
-            % If ChannelName doesn't exist inside DataSource, return zero
-            % vector with same length as time vector.
+            % If ChannelName doesn't exist inside DataSource, return zero vector
             if isempty(ind)
                 y = [];
             else
-                y = obj.Data(:,ind);
+                y = obj.DataGroups(dataGroupInd).Values{ind};
             end
         end
         
