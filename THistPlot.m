@@ -126,18 +126,12 @@ function THistPlot(varargin)
     % ---------------------------------------------------------------------
     fprintf('\nREADING AND CONSTRUCTING DATASOURCE\n');
     fprintf('- Reads file ''%s'' using readStripFileGUI.m\n',fileData);
-    % Read str file and convert to ClassDataSource object
-    rawData = readStripFileGUI('<',{fileData},'>',{'empty'},'tmin',tmin,'tmax',tmax,'tsamp',tsamp,'output');
-
-    data = cell2mat(rawData(3:size(rawData,1), 2:size(rawData,2)));
-    channels = cell(1,size(rawData,2)-1);
-    for i = 1:length(channels)
-        channels{i} = sprintf('%s-%s',rawData{1,i+1},rawData{2,i+1});
-    end
+    
+    DataGroups = ReadStripfile(fileData,tmin,tmax,tsamp);
     
     fprintf('- Creating data source object\n');
-    DataSource = ClassDataSource(data,channels);
-    fprintf('     Number of channels: %d\n',length(DataSource.Channels));
+    DataSource = ClassDataSource(DataGroups);
+    fprintf('     Number of channels: %d\n',DataSource.NumberOfChannels);
     
     
     
