@@ -24,7 +24,7 @@ function THistPlot(varargin)
 %
     clc;
 
-    version = '1.0.0-beta.4';
+    version = '1.0.0-beta.5';
     scriptUrl = 'https://github.com/danneedebro/THistPlot';
     scriptPathFull = mfilename('fullpath');
     [scriptPath,~] = fileparts(scriptPathFull);
