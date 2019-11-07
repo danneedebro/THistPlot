@@ -2,11 +2,11 @@
 0000100 strip fmtout
 0000103 0
 
-*XYLabelDefaults: time-0 Flow time (seconds)
-*XYLabelDefaults: mflowj- Mass flow (kg/s)
-*XYLabelDefaults: p- Pressure (Pa)
-*XYLabelDefaults: temp Temperature (K)
-*XYLabelDefaults: void Void fraction (-)
+*ChannelDefaults: Pattern="time-0", Label="Time (s)"
+*ChannelDefaults: Pattern="^p-", Label="Pressure (bar a)", Scale=1e-5, SpanMin = 1
+*ChannelDefaults: Pattern="^mflowj-", Label="Mass flow (kg/s)"
+*ChannelDefaults: Pattern="^temp", Label="Temperature (°C)", Offset=-273.15
+
 
 *vLine: @findTime(time-0,vlvstem-253,>,0) SRV first open
 
@@ -14,7 +14,6 @@
 
 *<GROUP>
 *Title: System 337: Mass flows
-*/YLabel: Mass flow (kg/s)
 1001  mflowj    101000000
 1002  mflowj    103000000
 1003  mflowj    105000000
@@ -33,7 +32,6 @@
 
 *<GROUP>
 *Title: System 711: Mass flows
-*/YLabel: Mass flow (kg/s)
 1016  mflowj    201000000
 1017  mflowj    203000000
 1018  mflowj    205000000
@@ -46,7 +44,6 @@
 
 *<GROUP>
 *Title: System 337/711: Heat exchanger mass flows
-*/YLabel: Mass flow (kg/s)
 1025  mflowj    311000000
 1026  mflowj    313000000
 1027  mflowj    331000000
@@ -56,8 +53,6 @@
 
 *<GROUP>
 *Title: System 337: Pressure
-*YLabel: Pressure (bar a)
-*YScale: 1e-5
 1031  p    100010000
 1032  p    102010000
 1033  p    102050000
@@ -83,8 +78,6 @@
 
 *<GROUP>
 *Title: System 711: Pressure
-*YLabel: Pressure (bar a)
-*YScale: 1e-5
 1053  p    200010000
 1054  p    202010000
 1055  p    202250000
@@ -101,10 +94,10 @@
 1066  p    252080000
 1067  p    254010000
 
+Curves: mflowj-10302
+
 *<GROUP>
 *Title: System 337/711: Pressure in heat exchanger
-*YLabel: Pressure (bar a)
-*YScale: 1e-5
 1068  p    300010000
 1069  p    300170000
 1070  p    310010000
@@ -143,8 +136,6 @@
 
 *<GROUP>
 *Title: Temperature
-*YLabel: Temperature (°C)
-*YOffset: -273.15
 *YSpanMin: 5
 1101  tempf  102010000
 1102  tempf  106010000
