@@ -23,6 +23,7 @@ classdef ClassPlotGroup < handle
         HLines          % Horizontal lines
         LineGroups      % A cell array of the ClassLineGroup objects in the plotgroup
         DataSource      % A ClassDataSource object that contains the data.
+        ChannelDefaults % A struct with default values for a line or plotgroup depending on the channel name (given as a regex)
     end
     
     methods
@@ -45,12 +46,13 @@ classdef ClassPlotGroup < handle
                     obj.XYLabelDefaults = {};
                     obj.YOffsetRead = 0;
                     obj.YOffsetFirst = 0;
-                    obj.YScale = 1;
-                    obj.YOffset = 0;
-                    obj.XScale = 1;
-                    obj.XOffset = 0;
+                    obj.YScale = [];
+                    obj.YOffset = [];
+                    obj.XScale = [];
+                    obj.XOffset = [];
                     obj.XInterval = [-9999,9999];
                     obj.YInterval = [-9999,9999];
+                    
                 else
                     obj.LineGroups = {};
                     obj.ConstantLines = {};
@@ -71,6 +73,7 @@ classdef ClassPlotGroup < handle
                     obj.XOffset = BaseGroup.XOffset;
                     obj.XInterval = BaseGroup.XInterval;
                     obj.YInterval = BaseGroup.YInterval;
+                    obj.ChannelDefaults = BaseGroup.ChannelDefaults;
                 end
                 obj.DataSource = DataSource;
             end
@@ -109,7 +112,16 @@ classdef ClassPlotGroup < handle
                         
                         % If YOffset already read, set YOffsetFirst = 1
                         if obj.YOffsetRead == 1; obj.YOffsetFirst = 1; else; obj.YOffsetFirst = 0; end
-                        
+                    
+                    case '*channeldefaults:'
+                        readInput = obj.DecodeInput(rem);
+                        if ~isfield(readInput,'pattern')
+                            fprintf('Error: No pattern given for channel defaults ''%s'' in ''%s''\n',strToParse,inputString);
+                            return;
+                        else
+                            obj.ChannelDefaults{end+1} = readInput;
+                        end
+                            
                     case '*xylabeldefaults:' % e.g. "*XYLabelDefaults: mflowj- Mass flow (kg/s)"
                         tmp = textscan(rem, '%s%[^\n]', 'delimiter', {' '},'MultipleDelimsAsOne',1);
                         if isempty(tmp{1,1}); return; else; channelFirstPart = tmp{1,1}{1}; end
@@ -249,6 +261,57 @@ classdef ClassPlotGroup < handle
             fprintf('Error: Failed getting value from string ''%s'' in ''%s''\n',strToParse,inputString);
         end
         
+        function output = DecodeInput(inputString)
+        % DecodeInput Parses a comma separated inputstring to a struct
+        % where input given without a fieldname is stored as a cell array
+        % under the fieldname 'Words'.
+        %
+        % Example:
+        % out = DecodeInput('p-10302000 "My Title", 45, Pattern= "p-")
+        %
+        % out.words = {'p-10302000', 'My Title', 45}
+        % out.pattern = 'p-'
+        %
+            % Store output in stuct
+            output = struct();
+            output.words = {};
+
+            % First split with comma
+            tmp1 = textscan(inputString, '%s', 'delimiter', ',');
+            tmp1 = tmp1{1,1};
+            for i = 1:size(tmp1,1)
+
+                % Split
+                tmp2 = textscan(tmp1{i,1}, '%s', 'delimiter', {'='});
+                tmp2 = tmp2{1,1};
+
+                if size(tmp2,1) >= 2 % field name given (Pattern="p-")
+                    fieldname = lower(strtrim(tmp2{1,1}));
+                    value = strtrim(tmp2{2,1});
+                else
+                    fieldname = 'words';
+                    value = strtrim(tmp2{1,1});
+                end
+
+                % convert 'value' to correct type (string if surrounded by quotes or
+                % not convertable to number)
+                withoutQuotes = regexp(value,'(?<=")[^"]+(?=")','match');
+                if ~isempty(withoutQuotes)      % Input is string surrounded by quotes
+                    value = withoutQuotes{1};
+                elseif isnan(str2double(value)) % Input is string NOT surrounded by quotes
+
+                else                            % Input is number
+                    value = str2double(value);
+                end
+
+                % Store value in output struct
+                if strcmpi(fieldname,'words')
+                    output.words{end+1} = value;
+                else
+                    output.(fieldname) = value;
+                end
+            end
+        end
         
     end % methods static
     

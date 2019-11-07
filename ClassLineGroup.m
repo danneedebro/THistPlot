@@ -31,6 +31,7 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             obj.ConstantLines = PlotGroup.ConstantLines;
             obj.VLines = PlotGroup.VLines;
             obj.HLines = PlotGroup.HLines;
+            obj.ChannelDefaults = PlotGroup.ChannelDefaults;
         end
         
         function handleAxes = Plot(obj,settings)
@@ -219,28 +220,33 @@ classdef ClassLineGroup < handle & ClassPlotGroup
             % Checks and sets plot properties (YScale, YInterval, etc).
             % If they are not set for linegroup inherit plotgroup properties
 
-            % Set default XLabel if empty
-            if isempty(obj.XLabel)
-                xChannel = obj.Channels{end}{1,1};
-                for i = length(obj.XYLabelDefaults):-1:1
-                    if strfind(xChannel,obj.XYLabelDefaults{i}{1,1}) == 1
-                        obj.XLabel = obj.XYLabelDefaults{i}{1,2};
-                        break;
-                    end
-                end
+            % Set default values related to the x-axis
+            xChannelName = obj.Channels{end}{1,1};
+            for i = 1:length(obj.ChannelDefaults)
+                channelDefaults = obj.ChannelDefaults{i};
+                if isempty(regexp(xChannelName,channelDefaults.pattern,'once')); continue; end 
+                
+                if isempty(obj.XLabel) && isfield(channelDefaults,'label'); obj.XLabel = channelDefaults.label; end
+                if isempty(obj.XScale) && isfield(channelDefaults,'scale'); obj.XScale = channelDefaults.scale; end
+                if isempty(obj.XOffset) && isfield(channelDefaults,'offset'); obj.XOffset = channelDefaults.offset; end
             end
             
-            % Set default YLabel if empty
-            if isempty(obj.YLabel)
-                yChannel = obj.Channels{end}{1,2};
-                for i = length(obj.XYLabelDefaults):-1:1
-                    if strfind(yChannel,obj.XYLabelDefaults{i}{1,1}) == 1
-                        obj.YLabel = obj.XYLabelDefaults{i}{1,2};
-                        break;
-                    end
-                end
+            % Set default values related to the y-axis
+            yChannelName = obj.Channels{end}{1,2};
+            for i = 1:length(obj.ChannelDefaults)
+                channelDefaults = obj.ChannelDefaults{i};
+                if isempty(regexp(yChannelName,channelDefaults.pattern,'once')); continue; end 
+                
+                if isempty(obj.YLabel) && isfield(channelDefaults,'label'); obj.YLabel = channelDefaults.label; end
+                if isempty(obj.YScale) && isfield(channelDefaults,'scale'); obj.YScale = channelDefaults.scale; end
+                if isempty(obj.YOffset) && isfield(channelDefaults,'offset'); obj.YOffset = channelDefaults.offset; end
             end
-
+            
+            % Default values for scale and offset.
+            if isempty(obj.YScale); obj.YScale = 1; end
+            if isempty(obj.YOffset); obj.YOffset = 0; end
+            if isempty(obj.XScale); obj.XScale = 1; end
+            if isempty(obj.XOffset); obj.XOffset = 0; end
         end
         
         function obj = AppendChannel(obj,XChannel,YChannel, Description)
